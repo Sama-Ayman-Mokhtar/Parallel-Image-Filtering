@@ -24,17 +24,28 @@ int main(){
         img_blur.push_back(vec);
     }
 
+    vector<vector<int>> img_sharpen;
+    for(int j = 0; j < i.height; j++){
+        vector<int> vec;
+        img_sharpen.push_back(vec);
+    }
+
+
     cout << "processing" <<endl;
     cout << "   blue filter" <<endl;
     i.blueFilter(img_blue);
     cout << "   blur filter" <<endl;
-    i.blurFilter(img_blur,21);
+    i.blurFilter(img_blur,13);
+    cout << "   shapen filter" << endl;
+    i.sharpenFilter(img_sharpen);
 
     cout << "writing" << endl;
     cout << "   blue filter" <<endl;
     i.writeImage("blueFilter.ppm",img_blue);
     cout << "   blur filter" <<endl;
-    i.writeImage("blurFilter.ppm",img_blur);
+     i.writeImage("blurFilter.ppm",img_blur);
+    cout << "   sharpen filter" <<endl;
+    i.writeImage("sharpenFilter.ppm",img_sharpen);
 
     return 0;
 }

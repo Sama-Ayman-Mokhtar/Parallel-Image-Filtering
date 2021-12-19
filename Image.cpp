@@ -95,20 +95,73 @@ void Image::blurFilter(vector<vector<int>> &img, int kernel_size)
                 {
              
                   
-                    temp_red += kernel[k][l]*imgDes[i+k][(j)+l];
-                    temp_green += kernel[k][l]*imgDes[i+k][(j+1)+l];
-                    temp_blue += kernel[k][l]*imgDes[i+k][(j+2)+l];
+                    temp_red += kernel[k][l]*imgDes[i+k][(j)+3*l];
+                    temp_green += kernel[k][l]*imgDes[i+k][(j+1)+3*l];
+                    temp_blue += kernel[k][l]*imgDes[i+k][(j+2)+3*l];
                   
                 }   
             }
             
-            img[i].push_back(temp_red);
-            img[i].push_back(temp_green);
-            img[i].push_back(temp_blue);
+            temp_red = temp_red > 255 ? 255 : temp_red;
+            temp_green = temp_green > 255 ? 255 : temp_green;      
+            temp_blue = temp_blue > 255 ? 255 : temp_blue;      
+    
+            img[i].push_back(temp_red < 0 ? 0 : temp_red);
+            img[i].push_back(temp_green < 0 ? 0 : temp_green);
+            img[i].push_back(temp_blue < 0 ? 0 : temp_blue);
             
         }
     }
 }
+
+void Image::sharpenFilter(vector<vector<int>> &img)
+{
+    int kernel_size = 3;
+    int A = 0;
+
+    vector<vector<int>> imgDes;
+    for(int j = 0; j < height; j++){
+        vector<int> v1;
+        imgDes.push_back(v1);
+    }
+
+    clone(imgDes);
+
+    int num = kernel_size / 2;
+    padding(imgDes, num);
+
+    vector<vector<int>> kernel = {
+        {0,  1,  0},
+        {1,-4-A, 1},
+        {0,  1,  0}
+        };
+    
+    for (int i = 0; i <= imgDes.size()-kernel_size; i++)
+    {
+        for (int j = 0; j <= imgDes[0].size()-kernel_size; j+=3)
+        {
+            int temp_red = 0, temp_green = 0, temp_blue = 0;
+            
+            for (int k = 0; k < kernel.size(); k++)
+            {
+                for (int l = 0; l < kernel[0].size(); l++)
+                {          
+                    temp_red += kernel[k][l]*imgDes[i+k][(j)+3*l];
+                    temp_green += kernel[k][l]*imgDes[i+k][(j+1)+3*l];
+                    temp_blue += kernel[k][l]*imgDes[i+k][(j+2)+3*l]; 
+                }   
+            }
+            temp_red = temp_red > 255 ? 255 : temp_red;
+            temp_green = temp_green > 255 ? 255 : temp_green;      
+            temp_blue = temp_blue > 255 ? 255 : temp_blue;      
+    
+            img[i].push_back(temp_red < 0 ? 0 : temp_red);
+            img[i].push_back(temp_green < 0 ? 0 : temp_green);
+            img[i].push_back(temp_blue < 0 ? 0 : temp_blue);
+        }
+    }
+}
+
 
 void Image::clone(vector<vector<int>> &imgDes)
 {

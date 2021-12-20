@@ -23,6 +23,7 @@ class Image{
         Image(string old_image_name);
         void writeImage(string new_image_name, vector<vector<int>> img);
         void blueFilter(vector<vector<int>> &img);
+        void greyFilter(vector<vector<int>> &img);
         void blurFilter(vector<vector<int>> &img,  int kernel_size);
         void sharpenFilter(vector<vector<int>> &img);
         ~Image(){};

@@ -131,9 +131,9 @@ void Image::sharpenFilter(vector<vector<int>> &img)
     padding(imgDes, num);
 
     vector<vector<int>> kernel = {
-        {0,  1,  0},
-        {1,-4-A, 1},
-        {0,  1,  0}
+        {1,  1,  1},
+        {1,-8-A, 1},
+        {1,  1,  1}
         };
     
     for (int i = 0; i <= imgDes.size()-kernel_size; i++)
@@ -162,6 +162,17 @@ void Image::sharpenFilter(vector<vector<int>> &img)
     }
 }
 
+void Image::greyFilter(vector<vector<int>> &img)
+{
+    for(int row = 0 ; row < height; row ++){
+        for (int col = 0; col < width; col++)
+        {
+            for(int num = 0 ; num < 3; num ++)
+                img[row].push_back((mat[row][col*3] + mat[row][col*3+1] + mat[row][col*3+2]) / 3);
+
+        }   
+    }
+}
 
 void Image::clone(vector<vector<int>> &imgDes)
 {

@@ -80,6 +80,40 @@ void Image::blurFilter(vector<vector<int>> &img, int kernel_size)
     applyKernel(img, kernel);
 }
 
+void Image::gaussianBlurFilter(vector<vector<int>> &img,  int kernel_size)
+{
+    vector<vector<double>> kernel;
+
+    fillGaussianKernel(kernel);
+
+    applyKernel(img, kernel);
+
+}
+
+void Image::fillGaussianKernel(vector<vector<double>> &kernel)
+{
+    //https://www.geeksforgeeks.org/gaussian-filter-generation-c/
+
+    int halfSize = kernel.size() / 2;
+	 double sigma = 1.0;
+    double r, s = 2.0 * sigma * sigma; // 2.0 wala halfSize
+ 
+    double sum = 0.0;
+ 
+    for (int x = -halfSize; x <= halfSize; x++) {
+        for (int y = -halfSize; y <= halfSize; y++) {
+            r = sqrt(x * x + y * y);
+            kernel[x + halfSize].push_back((exp(-(r * r) / s)) / (M_PI * s));
+            sum += kernel[x + halfSize][y + halfSize];
+        }
+    }
+ 
+    for (int i = 0; i < kernel.size(); ++i)
+        for (int j = 0; j < kernel.size(); ++j)
+            kernel[i][j] /= sum;
+
+}
+
 //edge detection
 void Image::sharpenFilter(vector<vector<int>> &img, int kernel_size)
 {

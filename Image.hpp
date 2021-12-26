@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <cmath>
 
 using namespace std;
 
@@ -25,6 +26,7 @@ class Image{
         void blueFilter(vector<vector<int>> &img);
         void greyFilter(vector<vector<int>> &img);
         void blurFilter(vector<vector<int>> &img,  int kernel_size);
+        void gaussianBlurFilter(vector<vector<int>> &img,  int kernel_size);
         void sharpenFilter(vector<vector<int>> &img, int kernel_size);
         void verticalSharpenFilter(vector<vector<int>> &img, int kernel_size);
         void horizontalSharpenFilter(vector<vector<int>> &img, int kernel_size);
@@ -33,6 +35,7 @@ class Image{
     private:
         void padding(vector<vector<int>> &img, int num);
         void clone(vector<vector<int>> &imgDes);
+        void fillGaussianKernel(vector<vector<double>> &kernel);
         void applyKernel(vector<vector<int>> &img, vector<vector<double>> &kernel);
 
 };

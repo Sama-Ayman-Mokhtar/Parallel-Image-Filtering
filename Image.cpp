@@ -3,6 +3,8 @@
 
 Image::Image(string old_image_name)
 {
+    //reading img
+
     ifstream old_image;
     old_image.open(old_image_name);
 
@@ -68,7 +70,9 @@ void Image::blurFilter(vector<vector<int>> &img, int kernel_size)
 {
 
     vector<vector<double>> kernel;
+
     for(int j = 0; j < kernel_size; j++){
+
         vector<double> v1(kernel_size, 1.0/(kernel_size * kernel_size));
         kernel.push_back(v1);
     }
@@ -76,17 +80,79 @@ void Image::blurFilter(vector<vector<int>> &img, int kernel_size)
     applyKernel(img, kernel);
 }
 
-void Image::sharpenFilter(vector<vector<int>> &img)
+//edge detection
+void Image::sharpenFilter(vector<vector<int>> &img, int kernel_size)
 {
-    int kernel_size = 3;
+    /*
     int A = 0;
-
     vector<vector<double>> kernel = {
         {1,  1,  1},
         {1,-8-A, 1},
         {1,  1,  1}
         };
+        */
+    vector<vector<double>> kernel;
 
+    for(int j = 0; j < kernel_size; j++){
+
+        vector<double> v1(kernel_size, 1.0);
+        if(j == kernel_size / 2)
+            v1[j] = -1 * (kernel_size * kernel_size - 1);
+
+        kernel.push_back(v1);
+    }
+    
+    applyKernel(img, kernel);
+}
+
+//vertical edge detection
+void Image::verticalSharpenFilter(vector<vector<int>> &img, int kernel_size)
+{
+    /*
+    int A = 0;
+    vector<vector<double>> kernel = {
+        {1, -2, 1},
+        {1, -2, 1},
+        {1, -2, 1}
+        };
+        */
+    vector<vector<double>> kernel;
+
+    for(int j = 0; j < kernel_size; j++){
+
+        vector<double> v1(kernel_size, 1.0);
+        v1[kernel_size / 2] = -1 * (kernel_size / 2 + 1);
+
+        kernel.push_back(v1);
+    }
+    
+    applyKernel(img, kernel);
+}
+
+//horizontal edge detection
+void Image::horizontalSharpenFilter(vector<vector<int>> &img, int kernel_size)
+{
+    /*
+    int A = 0;
+    vector<vector<double>> kernel = {
+        {1,  1,   1},
+        {-2, -2, -2},
+        {1,  1,   1}
+        };
+        */
+    vector<vector<double>> kernel;
+
+    for(int j = 0; j < kernel_size; j++){
+     
+        if(j == kernel_size / 2){
+             vector<double> v1(kernel_size, -1 * (kernel_size / 2 + 1));
+             kernel.push_back(v1);
+        }else{
+            vector<double> v1(kernel_size, 1.0);
+            kernel.push_back(v1);
+        }
+            
+    }  
     applyKernel(img, kernel);
 }
 

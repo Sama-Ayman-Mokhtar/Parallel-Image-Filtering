@@ -25,7 +25,9 @@ class Image{
         void blueFilter(vector<vector<int>> &img);
         void greyFilter(vector<vector<int>> &img);
         void blurFilter(vector<vector<int>> &img,  int kernel_size);
-        void sharpenFilter(vector<vector<int>> &img);
+        void sharpenFilter(vector<vector<int>> &img, int kernel_size);
+        void verticalSharpenFilter(vector<vector<int>> &img, int kernel_size);
+        void horizontalSharpenFilter(vector<vector<int>> &img, int kernel_size);
         ~Image(){};
 
     private:

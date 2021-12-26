@@ -31,6 +31,7 @@ class Image{
     private:
         void padding(vector<vector<int>> &img, int num);
         void clone(vector<vector<int>> &imgDes);
+        void applyKernel(vector<vector<int>> &img, vector<vector<double>> &kernel);
 
 };
 

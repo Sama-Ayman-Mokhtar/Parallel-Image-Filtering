@@ -66,16 +66,6 @@ void Image::blueFilter(vector<vector<int>> &img)
 
 void Image::blurFilter(vector<vector<int>> &img, int kernel_size)
 {
-    vector<vector<int>> imgDes;
-    for(int j = 0; j < height; j++){
-        vector<int> v1;
-        imgDes.push_back(v1);
-    }
-
-    clone(imgDes);
-
-    int num = kernel_size / 2;
-    padding(imgDes, num);
 
     vector<vector<double>> kernel;
     for(int j = 0; j < kernel_size; j++){
@@ -83,41 +73,26 @@ void Image::blurFilter(vector<vector<int>> &img, int kernel_size)
         kernel.push_back(v1);
     }
 
-    for (int i = 0; i <= imgDes.size()-kernel_size; i++)
-    {
-        for (int j = 0; j <= imgDes[0].size()-kernel_size; j+=3)
-        {
-            double temp_red = 0, temp_green = 0, temp_blue = 0;
-            
-            for (int k = 0; k < kernel.size(); k++)
-            {
-                for (int l = 0; l < kernel[0].size(); l++)
-                {
-             
-                  
-                    temp_red += kernel[k][l]*imgDes[i+k][(j)+3*l];
-                    temp_green += kernel[k][l]*imgDes[i+k][(j+1)+3*l];
-                    temp_blue += kernel[k][l]*imgDes[i+k][(j+2)+3*l];
-                  
-                }   
-            }
-            
-            temp_red = temp_red > 255 ? 255 : temp_red;
-            temp_green = temp_green > 255 ? 255 : temp_green;      
-            temp_blue = temp_blue > 255 ? 255 : temp_blue;      
-    
-            img[i].push_back(temp_red < 0 ? 0 : temp_red);
-            img[i].push_back(temp_green < 0 ? 0 : temp_green);
-            img[i].push_back(temp_blue < 0 ? 0 : temp_blue);
-            
-        }
-    }
+    applyKernel(img, kernel);
 }
 
 void Image::sharpenFilter(vector<vector<int>> &img)
 {
     int kernel_size = 3;
     int A = 0;
+
+    vector<vector<double>> kernel = {
+        {1,  1,  1},
+        {1,-8-A, 1},
+        {1,  1,  1}
+        };
+
+    applyKernel(img, kernel);
+}
+
+void Image::applyKernel(vector<vector<int>> &img, vector<vector<double>> &kernel)
+{
+    int kernel_size = kernel.size();
 
     vector<vector<int>> imgDes;
     for(int j = 0; j < height; j++){
@@ -130,17 +105,11 @@ void Image::sharpenFilter(vector<vector<int>> &img)
     int num = kernel_size / 2;
     padding(imgDes, num);
 
-    vector<vector<int>> kernel = {
-        {1,  1,  1},
-        {1,-8-A, 1},
-        {1,  1,  1}
-        };
-    
     for (int i = 0; i <= imgDes.size()-kernel_size; i++)
     {
         for (int j = 0; j <= imgDes[0].size()-kernel_size; j+=3)
         {
-            int temp_red = 0, temp_green = 0, temp_blue = 0;
+            double temp_red = 0, temp_green = 0, temp_blue = 0;
             
             for (int k = 0; k < kernel.size(); k++)
             {
@@ -160,6 +129,7 @@ void Image::sharpenFilter(vector<vector<int>> &img)
             img[i].push_back(temp_blue < 0 ? 0 : temp_blue);
         }
     }
+
 }
 
 void Image::greyFilter(vector<vector<int>> &img)

@@ -3,7 +3,7 @@ CC = g++
 CFLAGS = -Wall -g
  
 main: main.o Image.o
-	$(CC) $(CFLAGS) -o main main.o Image.o
+	$(CC) $(CFLAGS) -pthread -o main main.o Image.o
  
 main.o: main.cpp Image.hpp
 	$(CC) $(CFLAGS) -c main.cpp

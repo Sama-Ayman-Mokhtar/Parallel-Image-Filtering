@@ -1,5 +1,10 @@
 #include "Image.hpp"
 
+int globalWidth;
+vector<vector<int>> resImg;
+vector<vector<int>> tempMat;
+vector<vector<double>> kernel;
+
 Image::Image(string old_image_name)
 {
     //reading img
@@ -14,7 +19,7 @@ Image::Image(string old_image_name)
     old_image >> width;
     old_image >> height;
     old_image >> rgb;
-
+    globalWidth = width;
     for(int i = 0; i < height; i++){
         vector<int> v1;
         mat.push_back(v1);
@@ -70,12 +75,12 @@ void Image::blueFilter()
     }
 }
 
-void Image::blurFilter(int kernel_size)
+void Image::blurFilter(int kernel_size, bool useThreads)
 {
 
     resImg.clear();
     for(int j = 0; j < height; j++){
-        vector<int> vec;
+        vector<int> vec(width*3, 0);
         resImg.push_back(vec);
     }
 
@@ -88,14 +93,14 @@ void Image::blurFilter(int kernel_size)
         kernel.push_back(v1);
     }
     initTempMat();
-    applyKernel();
+    applyKernel(useThreads);
 }
 
-void Image::gaussianBlurFilter(int kernel_size)
+void Image::gaussianBlurFilter(int kernel_size, bool useThreads)
 {
     resImg.clear();
     for(int j = 0; j < height; j++){
-        vector<int> vec;
+        vector<int> vec(width*3, 0);
         resImg.push_back(vec);
     }
 
@@ -109,7 +114,7 @@ void Image::gaussianBlurFilter(int kernel_size)
     fillGaussianKernel();
     
     initTempMat();
-    applyKernel();
+    applyKernel(useThreads);
 
 }
 
@@ -138,11 +143,11 @@ void Image::fillGaussianKernel()
 }
 
 //edge detection
-void Image::sharpenFilter(int kernel_size)
+void Image::sharpenFilter(int kernel_size, bool useThreads)
 {
     resImg.clear();
     for(int j = 0; j < height; j++){
-        vector<int> vec;
+        vector<int> vec(width*3, 0);
         resImg.push_back(vec);
     }
     /*
@@ -167,15 +172,96 @@ void Image::sharpenFilter(int kernel_size)
     }
 
     initTempMat();
-    applyKernel();
+    applyKernel(useThreads);
+   
+    //pthread_exit(NULL);
+       
 }
 
+void Image::applyKernel(bool useThreads)
+{
+     if(!useThreads)
+    {
+        sequentialApplyKernel();
+        return;
+    }
+
+    pthread_t threads[THREADS_NUM];
+    for (long i = 0; i < THREADS_NUM; i++)
+    {
+        if(pthread_create(&threads[i], NULL, parallelApplyKernel, (void *) i) < 0)
+        {
+            cerr << "[!] failed to create thread " << i << endl;
+        }
+    }
+    for (long i = 0; i < THREADS_NUM; i++)
+    {
+        if(pthread_join(threads[i], NULL))
+        {
+            cerr << "[!] failed to join thread " << i << endl;
+        }
+    }
+
+}
+
+
+void* Image::parallelApplyKernel(void* thread_id)
+{
+    long threadID = (long) thread_id;
+   
+    
+    int height = resImg.size();
+    int width = globalWidth*3;
+
+    int widthInterval = width / ROOT_THREADS_NUM;
+    int heightInterval = height / ROOT_THREADS_NUM;
+   
+    int strtWidth = (threadID%ROOT_THREADS_NUM) * widthInterval;
+    int endWidth = strtWidth + widthInterval;
+
+    int strtHeight = (threadID/ROOT_THREADS_NUM) * heightInterval;
+    int endHeight = strtHeight + heightInterval;
+
+    if(threadID+1 == THREADS_NUM)
+    {
+        endWidth = width;
+        endHeight = height;
+    }
+
+    for (int i = strtHeight; i < endHeight; i++)
+    {
+        for (int j = strtWidth; j < endWidth; j+=3)
+        {
+            double temp_red = 0, temp_green = 0, temp_blue = 0;
+            
+            for (int k = 0; k < kernel.size(); k++)
+            {
+                for (int l = 0; l < kernel[0].size(); l++)
+                {          
+                    temp_red += kernel[k][l]*tempMat[i+k][(j)+3*l];
+                    temp_green += kernel[k][l]*tempMat[i+k][(j+1)+3*l];
+                    temp_blue += kernel[k][l]*tempMat[i+k][(j+2)+3*l]; 
+                }   
+            }
+            temp_red = temp_red > 255 ? 255 : temp_red;
+            temp_green = temp_green > 255 ? 255 : temp_green;      
+            temp_blue = temp_blue > 255 ? 255 : temp_blue;      
+    
+            resImg[i][j] = (temp_red < 0 ? 0 : temp_red);
+            resImg[i][j+1] = (temp_green < 0 ? 0 : temp_green);
+            resImg[i][j+2] = (temp_blue < 0 ? 0 : temp_blue);
+        }
+    }
+    return NULL;
+}
+
+
 //vertical edge detection
-void Image::verticalSharpenFilter(int kernel_size)
+void Image::verticalSharpenFilter(int kernel_size, bool useThreads)
 {
     resImg.clear();
     for(int j = 0; j < height; j++){
-        vector<int> vec;
+        vector<int> vec(width*3, 0);
         resImg.push_back(vec);
     }
     /*
@@ -197,15 +283,15 @@ void Image::verticalSharpenFilter(int kernel_size)
         kernel.push_back(v1);
     }
     initTempMat();
-    applyKernel();
+    applyKernel(useThreads);
 }
 
 //horizontal edge detection
-void Image::horizontalSharpenFilter( int kernel_size)
+void Image::horizontalSharpenFilter( int kernel_size, bool useThreads)
 {
     resImg.clear();
     for(int j = 0; j < height; j++){
-        vector<int> vec;
+        vector<int> vec(width*3, 0);
         resImg.push_back(vec);
     }
     /*
@@ -231,7 +317,7 @@ void Image::horizontalSharpenFilter( int kernel_size)
             
     }
     initTempMat();  
-    applyKernel();
+    applyKernel(useThreads);
 }
 
 //must call one of the filters before initTempMat (so that the kernel get initialized)
@@ -253,9 +339,8 @@ void Image::initTempMat()
 }
 
 //must call initTempMat before applyKernel
-void Image::applyKernel()
+void Image::sequentialApplyKernel()
 {
-    
 
     for (int i = 0; i <= tempMat.size()-kernel.size(); i++)
     {
@@ -276,9 +361,9 @@ void Image::applyKernel()
             temp_green = temp_green > 255 ? 255 : temp_green;      
             temp_blue = temp_blue > 255 ? 255 : temp_blue;      
     
-            resImg[i].push_back(temp_red < 0 ? 0 : temp_red);
-            resImg[i].push_back(temp_green < 0 ? 0 : temp_green);
-            resImg[i].push_back(temp_blue < 0 ? 0 : temp_blue);
+            resImg[i][j] = (temp_red < 0 ? 0 : temp_red);
+            resImg[i][j+1] = (temp_green < 0 ? 0 : temp_green);
+            resImg[i][j+2] = (temp_blue < 0 ? 0 : temp_blue);
         }
     }
 

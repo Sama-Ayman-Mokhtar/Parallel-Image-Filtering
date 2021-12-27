@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include <iostream>
@@ -8,6 +6,7 @@
 #include <sstream>
 #include <vector>
 #include <cmath>
+#include <time.h>
 
 using namespace std;
 
@@ -19,25 +18,29 @@ class Image{
         int rgb;
         //int** mat; Segmentation fault
         vector<vector<int>> mat;
+        vector<vector<int>> tempMat;
+        vector<vector<int>> resImg;
+
+    private:
+        vector<vector<double>> kernel;
         
     public:
         Image(string old_image_name);
-        void writeImage(string new_image_name, vector<vector<int>> img);
-        void blueFilter(vector<vector<int>> &img);
-        void greyFilter(vector<vector<int>> &img);
-        void blurFilter(vector<vector<int>> &img,  int kernel_size);
-        void gaussianBlurFilter(vector<vector<int>> &img,  int kernel_size);
-        void sharpenFilter(vector<vector<int>> &img, int kernel_size);
-        void verticalSharpenFilter(vector<vector<int>> &img, int kernel_size);
-        void horizontalSharpenFilter(vector<vector<int>> &img, int kernel_size);
+        void writeImage(string new_image_name);
+        void blueFilter();
+        void greyFilter();
+        void blurFilter(int kernel_size);
+        void gaussianBlurFilter(int kernel_size);
+        void sharpenFilter(int kernel_size);
+        void verticalSharpenFilter(int kernel_size);
+        void horizontalSharpenFilter(int kernel_size);
         ~Image(){};
 
     private:
-        void padding(vector<vector<int>> &img, int num);
-        void clone(vector<vector<int>> &imgDes);
-        void fillGaussianKernel(vector<vector<double>> &kernel);
-        void applyKernel(vector<vector<int>> &img, vector<vector<double>> &kernel);
+        void padding(int num);
+        void initTempMat();
+        void clone();
+        void fillGaussianKernel();
+        void applyKernel();
 
 };
-
-

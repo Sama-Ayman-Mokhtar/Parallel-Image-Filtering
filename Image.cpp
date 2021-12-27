@@ -1,4 +1,3 @@
-
 #include "Image.hpp"
 
 Image::Image(string old_image_name)
@@ -53,49 +52,73 @@ Image::Image(string old_image_name)
     old_image.close();
 }
 
-void Image::blueFilter(vector<vector<int>> &img)
+void Image::blueFilter()
 {
+    resImg.clear();
+    for(int j = 0; j < height; j++){
+        vector<int> vec;
+        resImg.push_back(vec);
+    }
     for(int row = 0 ; row < height; row ++){
         for (int col = 0; col < width; col++)
         {
-            img[row].push_back(mat[row][col*3] );
-            img[row].push_back(mat[row][col*3+1] );
-            img[row].push_back(mat[row][col*3+2] + 50 > 255 ? 255 : mat[row][col*3+2] + 50);
+            resImg[row].push_back(mat[row][col*3] );
+            resImg[row].push_back(mat[row][col*3+1] );
+            resImg[row].push_back(mat[row][col*3+2] + 50 > 255 ? 255 : mat[row][col*3+2] + 50);
 
         }   
     }
 }
 
-void Image::blurFilter(vector<vector<int>> &img, int kernel_size)
+void Image::blurFilter(int kernel_size)
 {
 
-    vector<vector<double>> kernel;
+    resImg.clear();
+    for(int j = 0; j < height; j++){
+        vector<int> vec;
+        resImg.push_back(vec);
+    }
+
+   // vector<vector<double>> kernel;
+    kernel.clear();
 
     for(int j = 0; j < kernel_size; j++){
 
         vector<double> v1(kernel_size, 1.0/(kernel_size * kernel_size));
         kernel.push_back(v1);
     }
-
-    applyKernel(img, kernel);
+    initTempMat();
+    applyKernel();
 }
 
-void Image::gaussianBlurFilter(vector<vector<int>> &img,  int kernel_size)
+void Image::gaussianBlurFilter(int kernel_size)
 {
-    vector<vector<double>> kernel;
+    resImg.clear();
+    for(int j = 0; j < height; j++){
+        vector<int> vec;
+        resImg.push_back(vec);
+    }
 
-    fillGaussianKernel(kernel);
+    //vector<vector<double>> kernel;
+    kernel.clear();
+    for(int j = 0; j < kernel_size; j++){
+        vector<double> vec;
+        kernel.push_back(vec);
+    }
 
-    applyKernel(img, kernel);
+    fillGaussianKernel();
+    
+    initTempMat();
+    applyKernel();
 
 }
 
-void Image::fillGaussianKernel(vector<vector<double>> &kernel)
+void Image::fillGaussianKernel()
 {
     //https://www.geeksforgeeks.org/gaussian-filter-generation-c/
 
     int halfSize = kernel.size() / 2;
-	 double sigma = 1.0;
+	double sigma = 1.0;
     double r, s = 2.0 * sigma * sigma; // 2.0 wala halfSize
  
     double sum = 0.0;
@@ -115,8 +138,13 @@ void Image::fillGaussianKernel(vector<vector<double>> &kernel)
 }
 
 //edge detection
-void Image::sharpenFilter(vector<vector<int>> &img, int kernel_size)
+void Image::sharpenFilter(int kernel_size)
 {
+    resImg.clear();
+    for(int j = 0; j < height; j++){
+        vector<int> vec;
+        resImg.push_back(vec);
+    }
     /*
     int A = 0;
     vector<vector<double>> kernel = {
@@ -125,7 +153,9 @@ void Image::sharpenFilter(vector<vector<int>> &img, int kernel_size)
         {1,  1,  1}
         };
         */
-    vector<vector<double>> kernel;
+    
+    //vector<vector<double>> kernel;
+    kernel.clear();
 
     for(int j = 0; j < kernel_size; j++){
 
@@ -135,13 +165,19 @@ void Image::sharpenFilter(vector<vector<int>> &img, int kernel_size)
 
         kernel.push_back(v1);
     }
-    
-    applyKernel(img, kernel);
+
+    initTempMat();
+    applyKernel();
 }
 
 //vertical edge detection
-void Image::verticalSharpenFilter(vector<vector<int>> &img, int kernel_size)
+void Image::verticalSharpenFilter(int kernel_size)
 {
+    resImg.clear();
+    for(int j = 0; j < height; j++){
+        vector<int> vec;
+        resImg.push_back(vec);
+    }
     /*
     int A = 0;
     vector<vector<double>> kernel = {
@@ -150,7 +186,8 @@ void Image::verticalSharpenFilter(vector<vector<int>> &img, int kernel_size)
         {1, -2, 1}
         };
         */
-    vector<vector<double>> kernel;
+    //vector<vector<double>> kernel;
+    kernel.clear();
 
     for(int j = 0; j < kernel_size; j++){
 
@@ -159,13 +196,18 @@ void Image::verticalSharpenFilter(vector<vector<int>> &img, int kernel_size)
 
         kernel.push_back(v1);
     }
-    
-    applyKernel(img, kernel);
+    initTempMat();
+    applyKernel();
 }
 
 //horizontal edge detection
-void Image::horizontalSharpenFilter(vector<vector<int>> &img, int kernel_size)
+void Image::horizontalSharpenFilter( int kernel_size)
 {
+    resImg.clear();
+    for(int j = 0; j < height; j++){
+        vector<int> vec;
+        resImg.push_back(vec);
+    }
     /*
     int A = 0;
     vector<vector<double>> kernel = {
@@ -174,7 +216,8 @@ void Image::horizontalSharpenFilter(vector<vector<int>> &img, int kernel_size)
         {1,  1,   1}
         };
         */
-    vector<vector<double>> kernel;
+   // vector<vector<double>> kernel;
+    kernel.clear();
 
     for(int j = 0; j < kernel_size; j++){
      
@@ -186,28 +229,37 @@ void Image::horizontalSharpenFilter(vector<vector<int>> &img, int kernel_size)
             kernel.push_back(v1);
         }
             
-    }  
-    applyKernel(img, kernel);
+    }
+    initTempMat();  
+    applyKernel();
 }
 
-void Image::applyKernel(vector<vector<int>> &img, vector<vector<double>> &kernel)
+//must call one of the filters before initTempMat (so that the kernel get initialized)
+void Image::initTempMat()
 {
     int kernel_size = kernel.size();
 
-    vector<vector<int>> imgDes;
+    //vector<vector<int>> imgDes;
+    tempMat.clear();
     for(int j = 0; j < height; j++){
         vector<int> v1;
-        imgDes.push_back(v1);
+        tempMat.push_back(v1);
     }
 
-    clone(imgDes);
+    clone();
 
     int num = kernel_size / 2;
-    padding(imgDes, num);
+    padding(num);
+}
 
-    for (int i = 0; i <= imgDes.size()-kernel_size; i++)
+//must call initTempMat before applyKernel
+void Image::applyKernel()
+{
+    
+
+    for (int i = 0; i <= tempMat.size()-kernel.size(); i++)
     {
-        for (int j = 0; j <= imgDes[0].size()-kernel_size; j+=3)
+        for (int j = 0; j <= tempMat[0].size()-kernel.size(); j+=3)
         {
             double temp_red = 0, temp_green = 0, temp_blue = 0;
             
@@ -215,67 +267,72 @@ void Image::applyKernel(vector<vector<int>> &img, vector<vector<double>> &kernel
             {
                 for (int l = 0; l < kernel[0].size(); l++)
                 {          
-                    temp_red += kernel[k][l]*imgDes[i+k][(j)+3*l];
-                    temp_green += kernel[k][l]*imgDes[i+k][(j+1)+3*l];
-                    temp_blue += kernel[k][l]*imgDes[i+k][(j+2)+3*l]; 
+                    temp_red += kernel[k][l]*tempMat[i+k][(j)+3*l];
+                    temp_green += kernel[k][l]*tempMat[i+k][(j+1)+3*l];
+                    temp_blue += kernel[k][l]*tempMat[i+k][(j+2)+3*l]; 
                 }   
             }
             temp_red = temp_red > 255 ? 255 : temp_red;
             temp_green = temp_green > 255 ? 255 : temp_green;      
             temp_blue = temp_blue > 255 ? 255 : temp_blue;      
     
-            img[i].push_back(temp_red < 0 ? 0 : temp_red);
-            img[i].push_back(temp_green < 0 ? 0 : temp_green);
-            img[i].push_back(temp_blue < 0 ? 0 : temp_blue);
+            resImg[i].push_back(temp_red < 0 ? 0 : temp_red);
+            resImg[i].push_back(temp_green < 0 ? 0 : temp_green);
+            resImg[i].push_back(temp_blue < 0 ? 0 : temp_blue);
         }
     }
 
 }
 
-void Image::greyFilter(vector<vector<int>> &img)
+void Image::greyFilter()
 {
+    resImg.clear();
+    for(int j = 0; j < height; j++){
+        vector<int> vec;
+        resImg.push_back(vec);
+    }
     for(int row = 0 ; row < height; row ++){
         for (int col = 0; col < width; col++)
         {
             for(int num = 0 ; num < 3; num ++)
-                img[row].push_back((mat[row][col*3] + mat[row][col*3+1] + mat[row][col*3+2]) / 3);
+                resImg[row].push_back((mat[row][col*3] + mat[row][col*3+1] + mat[row][col*3+2]) / 3);
 
         }   
     }
 }
 
-void Image::clone(vector<vector<int>> &imgDes)
+void Image::clone()
 {
     for (int i = 0; i < mat.size(); i++)
     {
         for (int j = 0; j < mat[i].size(); j++)
         {      
-            imgDes[i].push_back(mat[i][j]);
+            tempMat[i].push_back(mat[i][j]);
         }
     }
 }
 
-void Image::padding(vector<vector<int>> &img, int num)
+void Image::padding(int num)
 {
     //right and left padding
-    for(int i = 0; i < img.size() ; i++){
+    for(int i = 0; i < tempMat.size() ; i++){
         for(int j = 0; j < num; j++)
         {
-            img[i].insert(img[i].begin(), 0);
-            img[i].push_back(0);
+            tempMat[i].insert(tempMat[i].begin(), 0);
+            tempMat[i].push_back(0);
         }
     }
 
     //top and down padding
     for(int i = 0; i < num; i++)
     {
-        vector<int> v(img[0].size(),0);
-        img.insert(img.begin(), v);
-        img.push_back(v);
+        vector<int> v(tempMat[0].size(),0);
+        tempMat.insert(tempMat.begin(), v);
+        tempMat.push_back(v);
     }
 }
 
-void Image::writeImage(string new_image_name, vector<vector<int>> img)
+void Image::writeImage(string new_image_name)
 {
     ofstream newImage;
     newImage.open(new_image_name);
@@ -287,9 +344,9 @@ void Image::writeImage(string new_image_name, vector<vector<int>> img)
     for(int row = 0 ; row < height; row ++){
         for (int col = 0; col < width; col++)
         {
-            newImage << img[row][col*3] << " ";
-            newImage << img[row][col*3 + 1] << " ";
-            newImage << img[row][col*3 + 2] << " " << endl;
+            newImage << resImg[row][col*3] << " ";
+            newImage << resImg[row][col*3 + 1] << " ";
+            newImage << resImg[row][col*3 + 2] << " " << endl;
         }
         
     }

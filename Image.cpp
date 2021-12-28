@@ -75,7 +75,7 @@ void Image::blueFilter()
     }
 }
 
-void Image::blurFilter(int kernel_size, bool useThreads)
+void Image::blurFilter(int kernel_size, int processing_type)
 {
 
     resImg.clear();
@@ -93,10 +93,10 @@ void Image::blurFilter(int kernel_size, bool useThreads)
         kernel.push_back(v1);
     }
     initTempMat();
-    applyKernel(useThreads);
+    applyKernel(processing_type);
 }
 
-void Image::gaussianBlurFilter(int kernel_size, bool useThreads)
+void Image::gaussianBlurFilter(int kernel_size, int processing_type)
 {
     resImg.clear();
     for(int j = 0; j < height; j++){
@@ -114,7 +114,7 @@ void Image::gaussianBlurFilter(int kernel_size, bool useThreads)
     fillGaussianKernel();
     
     initTempMat();
-    applyKernel(useThreads);
+    applyKernel(processing_type);
 
 }
 
@@ -143,7 +143,7 @@ void Image::fillGaussianKernel()
 }
 
 //edge detection
-void Image::sharpenFilter(int kernel_size, bool useThreads)
+void Image::sharpenFilter(int kernel_size, int processing_type)
 {
     resImg.clear();
     for(int j = 0; j < height; j++){
@@ -172,24 +172,29 @@ void Image::sharpenFilter(int kernel_size, bool useThreads)
     }
 
     initTempMat();
-    applyKernel(useThreads);
+    applyKernel(processing_type);
    
     //pthread_exit(NULL);
        
 }
 
-void Image::applyKernel(bool useThreads)
+void Image::applyKernel(int processing_type)
 {
-     if(!useThreads)
+    if(processing_type == SEQUENTIAL)
     {
         sequentialApplyKernel();
+        return;
+    }
+    else if(processing_type == OPEN_MP){
+
+        openMP_parallelApplyKernel();
         return;
     }
 
     pthread_t threads[THREADS_NUM];
     for (long i = 0; i < THREADS_NUM; i++)
     {
-        if(pthread_create(&threads[i], NULL, parallelApplyKernel, (void *) i) < 0)
+        if(pthread_create(&threads[i], NULL, pthreads_parallelApplyKernel, (void *) i) < 0)
         {
             cerr << "[!] failed to create thread " << i << endl;
         }
@@ -204,8 +209,65 @@ void Image::applyKernel(bool useThreads)
 
 }
 
+//not tested when omp_get_num_threads() != THREADS_NUM
+//what if returned smthing not power of 2 (handel this case)
+//& getting its root
+void Image::openMP_parallelApplyKernel()
+{
+    omp_set_num_threads(THREADS_NUM);
+    #pragma omp parallel
+    {
+        int threadID = omp_get_thread_num();
+        int threads_count = omp_get_num_threads();
 
-void* Image::parallelApplyKernel(void* thread_id)
+        int height = resImg.size();
+        int width = globalWidth*3;
+
+        int widthInterval = width / ROOT_THREADS_NUM;
+        int heightInterval = height / ROOT_THREADS_NUM;
+    
+        int strtWidth = (threadID%ROOT_THREADS_NUM) * widthInterval;
+        int endWidth = strtWidth + widthInterval;
+
+        int strtHeight = (threadID/ROOT_THREADS_NUM) * heightInterval;
+        int endHeight = strtHeight + heightInterval;
+
+        if(threadID+1 == THREADS_NUM)
+        {
+            endWidth = width;
+            endHeight = height;
+        }
+
+        for (int i = strtHeight; i < endHeight; i++)
+        {
+            for (int j = strtWidth; j < endWidth; j+=3)
+            {
+                double temp_red = 0, temp_green = 0, temp_blue = 0;
+                
+                for (int k = 0; k < kernel.size(); k++)
+                {
+                    for (int l = 0; l < kernel[0].size(); l++)
+                    {          
+                        temp_red += kernel[k][l]*tempMat[i+k][(j)+3*l];
+                        temp_green += kernel[k][l]*tempMat[i+k][(j+1)+3*l];
+                        temp_blue += kernel[k][l]*tempMat[i+k][(j+2)+3*l]; 
+                    }   
+                }
+                temp_red = temp_red > 255 ? 255 : temp_red;
+                temp_green = temp_green > 255 ? 255 : temp_green;      
+                temp_blue = temp_blue > 255 ? 255 : temp_blue;      
+        
+                resImg[i][j] = (temp_red < 0 ? 0 : temp_red);
+                resImg[i][j+1] = (temp_green < 0 ? 0 : temp_green);
+                resImg[i][j+2] = (temp_blue < 0 ? 0 : temp_blue);
+            }
+        }
+
+    }
+}
+
+
+void* Image::pthreads_parallelApplyKernel(void* thread_id)
 {
     long threadID = (long) thread_id;
    
@@ -257,7 +319,7 @@ void* Image::parallelApplyKernel(void* thread_id)
 
 
 //vertical edge detection
-void Image::verticalSharpenFilter(int kernel_size, bool useThreads)
+void Image::verticalSharpenFilter(int kernel_size, int processing_type)
 {
     resImg.clear();
     for(int j = 0; j < height; j++){
@@ -283,11 +345,11 @@ void Image::verticalSharpenFilter(int kernel_size, bool useThreads)
         kernel.push_back(v1);
     }
     initTempMat();
-    applyKernel(useThreads);
+    applyKernel(processing_type);
 }
 
 //horizontal edge detection
-void Image::horizontalSharpenFilter( int kernel_size, bool useThreads)
+void Image::horizontalSharpenFilter( int kernel_size, int processing_type)
 {
     resImg.clear();
     for(int j = 0; j < height; j++){
@@ -317,7 +379,7 @@ void Image::horizontalSharpenFilter( int kernel_size, bool useThreads)
             
     }
     initTempMat();  
-    applyKernel(useThreads);
+    applyKernel(processing_type);
 }
 
 //must call one of the filters before initTempMat (so that the kernel get initialized)

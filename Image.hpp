@@ -7,9 +7,14 @@
 #include <vector>
 #include <cmath>
 #include <time.h>
+#include <omp.h>
 
-#define THREADS_NUM 16 //powers of two {4,9,16,..}
+#define THREADS_NUM 16 //perfect squares {4,9,16,..}
 #define ROOT_THREADS_NUM 4 
+
+#define SEQUENTIAL 1
+#define PTHREADS 2
+#define OPEN_MP 3
 
 using namespace std;
 
@@ -33,11 +38,11 @@ class Image{
         void writeImage(string new_image_name);
         void blueFilter();
         void greyFilter();
-        void blurFilter(int kernel_size, bool useThreads);
-        void gaussianBlurFilter(int kernel_size, bool useThreads);
-        void sharpenFilter(int kernel_size, bool useThreads);
-        void verticalSharpenFilter(int kernel_sizem, bool useThreads);
-        void horizontalSharpenFilter(int kernel_size, bool useThreads);
+        void blurFilter(int kernel_size, int processing_type);
+        void gaussianBlurFilter(int kernel_size, int processing_type);
+        void sharpenFilter(int kernel_size, int processing_type);
+        void verticalSharpenFilter(int kernel_size, int processing_type);
+        void horizontalSharpenFilter(int kernel_size, int processing_type);
         ~Image(){};
 
     private:
@@ -45,8 +50,9 @@ class Image{
         void initTempMat();
         void clone();
         void fillGaussianKernel();
-        void applyKernel(bool useThreads);
+        void applyKernel(int processing_type);
         void sequentialApplyKernel();
-        static void* parallelApplyKernel(void * thread_id);
+        void openMP_parallelApplyKernel();
+        static void* pthreads_parallelApplyKernel(void * thread_id);
 
 };

@@ -1,9 +1,9 @@
 #https://www.softwaretestinghelp.com/cpp-makefile-tutorial/
 CC = g++
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -pthread -fopenmp
  
 main: main.o Image.o
-	$(CC) $(CFLAGS) -pthread -o main main.o Image.o
+	$(CC) $(CFLAGS) -o main main.o Image.o
  
 main.o: main.cpp Image.hpp
 	$(CC) $(CFLAGS) -c main.cpp
